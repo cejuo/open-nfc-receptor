@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "open-nfc-receptor",
+    "name": "Onapp! - Admin",
     "slug": "open-nfc-receptor",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,17 +14,17 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.xohto.opennfcreceptor"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.xohto.opennfcreceptor"
     },
     "web": {
       "favicon": "./assets/favicon.png"
