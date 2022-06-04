@@ -9,8 +9,10 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.IOException;
 
@@ -29,7 +31,7 @@ public class HCEReceptor extends ReactContextBaseJavaModule implements NfcAdapte
     public void getMessage(Callback _callback) {
         this.callback = _callback;
         nfcAdapter = NfcAdapter.getDefaultAdapter(getReactApplicationContext());
-        nfcAdapter.enableReaderMode(null, this, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK, null);
+        nfcAdapter.enableReaderMode(getCurrentActivity(), this, NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK, null);
     }
 
     @NonNull
@@ -63,10 +65,15 @@ public class HCEReceptor extends ReactContextBaseJavaModule implements NfcAdapte
             isoDep.transceive(createSelectAidApdu(AID_ANDROID));
             byte[] response;
             while (isoDep.isConnected()) {
-                response = isoDep.transceive(this.message.getBytes());
-                this.callback.invoke(new String(response));
+                response = isoDep.transceive("example".getBytes());
+                Log.i("HCEReceptor", "======Sending======");
                 Log.i("HCEReceptor", new String(response));
+                this.callback.invoke(new String(response));
+                Log.i("HCEReceptor", "======CALLBACK======");
+                Log.i("HCEReceptor", new String(response));
+                Log.i("HCEReceptor", "======Continue======");
                 isoDep.close();
+                nfcAdapter.disableReaderMode(getCurrentActivity());
             }
             //isoDep.close();
         } catch (IOException e) {
