@@ -2,6 +2,7 @@ import { LOGIN_SUCCESFUL } from "../actions/account";
 const initialState = {
   email: undefined,
   session: undefined,
+  class: undefined,
   tokens: [],
 };
 
@@ -13,6 +14,7 @@ const accountReducer = (state = initialState, action: any) => {
         ...state,
         email: action.email,
         session: action.session,
+        class: action.class,
         tokens: action.tokens || [],
       };
     default:

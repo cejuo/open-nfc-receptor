@@ -3,11 +3,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const LOGIN_SUCCESFUL = "LOGIN_SUCCESFUL";
 
-export const sendToken = (token: {}) => {
+export const sendToken = (token: any) => {
   return async (dispatch: any, getState: any) => {
     return new Promise((resolve, reject) => {
       console.log("sendToken");
       const socket = getState().socketStore;
+      const account = getState().accountStore;
+
+      console.log(token);
+
+      var _class = JSON.parse(token).class;
+      console.log("token class");
+      console.log(_class);
+      console.log("admin class");
+      console.log(account.class);
+
+      if (_class != account.class) {
+        resolve({ ok: false, reason: `El proveedor del token es ${_class}.\nTu proveedor es ${account.class}` });
+        return;
+      }
 
       if (!socket.isConnected) throw new Error("Not connected");
 
@@ -34,7 +48,14 @@ export const login = (email: string | null, password: string | undefined, sessio
           //@ts-ignore
           AsyncStorage.setItem("email", email);
           AsyncStorage.setItem("session", response.session);
-          dispatch({ type: LOGIN_SUCCESFUL, email: email, session: response.session, tokens: response.tokens });
+          AsyncStorage.setItem("session", response.class);
+          dispatch({
+            type: LOGIN_SUCCESFUL,
+            class: response.class,
+            email: email,
+            session: response.session,
+            tokens: response.tokens,
+          });
         }
         resolve(response);
       });

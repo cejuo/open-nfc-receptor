@@ -7,9 +7,11 @@ export const SAVE_SESSION = "SAVE_SESSION";
 
 export const connectToSocket = () => {
   return async (dispatch: any, getState: any) => {
+    console.log("ISDEV", __DEV__);
+
     const PORT = 4002;
     // prettier-ignore
-    const DOMAIN = (__DEV__ ? "http://192.168.1.88:" : "https://securpicks.com:") + PORT.toString();
+    const DOMAIN = (!__DEV__ ? "http://192.168.1.88:" : "https://.com:") + PORT.toString();
 
     console.log("Connecting socket...");
 

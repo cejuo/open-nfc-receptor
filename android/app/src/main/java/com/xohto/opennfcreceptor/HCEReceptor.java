@@ -62,20 +62,23 @@ public class HCEReceptor extends ReactContextBaseJavaModule implements NfcAdapte
         try {
             IsoDep isoDep = IsoDep.get(tag);
             isoDep.connect();
-            isoDep.transceive(createSelectAidApdu(AID_ANDROID));
             byte[] response;
+            response = isoDep.transceive(createSelectAidApdu(AID_ANDROID));
+            Log.i("HCEReceptor", "======FIRST RESPONSE======");
+            Log.i("HCEReceptor", new String(response));
             while (isoDep.isConnected()) {
-                response = isoDep.transceive("example".getBytes());
-                Log.i("HCEReceptor", "======Sending======");
+                response = isoDep.transceive(createSelectAidApdu(AID_ANDROID));
+                Log.i("HCEReceptor", "======RESPONSE======");
                 Log.i("HCEReceptor", new String(response));
                 this.callback.invoke(new String(response));
                 Log.i("HCEReceptor", "======CALLBACK======");
                 Log.i("HCEReceptor", new String(response));
                 Log.i("HCEReceptor", "======Continue======");
-                isoDep.close();
-                nfcAdapter.disableReaderMode(getCurrentActivity());
             }
-            //isoDep.close();
+            isoDep.close();
+            nfcAdapter.disableReaderMode(getCurrentActivity());
+            isoDep = null;
+            nfcAdapter = null;
         } catch (IOException e) {
             e.printStackTrace();
         }

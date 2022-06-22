@@ -1,7 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Image, StatusBar, SafeAreaView, StyleSheet, Text, NativeModules, View, Modal, Alert } from "react-native";
+import {
+  Image,
+  StatusBar,
+  BackHandler,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  NativeModules,
+  View,
+  Modal,
+  Alert,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import NfcManager from "react-native-nfc-manager";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 //@ts-ignore
 import SvG from "../assets/img/payment.svg";
@@ -14,22 +27,32 @@ function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+type RootStackParamList = {};
+type Props = NativeStackNavigationProp<RootStackParamList>;
+
 //@ts-ignore
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }: Props) {
   const dispatch = useDispatch();
   const [text, setText] = useState("");
   const [showModal, setShowModal] = useState(false);
   const accountStore = useSelector((state: any) => state.accountStore);
+
+  useEffect(() => {
+    navigation.addListener("beforeRemove", (e: any) => {
+      if (e.data.action.type == "GO_BACK") e.preventDefault();
+    });
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={"#fb8500"}></StatusBar>
 
       <View style={styles.topContainer}>
-        <Text style={styles.heading}>Hi {capitalizeFirstLetter(accountStore.email.split("@")[0])}! 👋</Text>
+        <Text style={styles.heading}>Hola {capitalizeFirstLetter(accountStore.email.split("@")[0])}! 👋</Text>
         <Button
-          title="logout"
+          title="cerrar sesión"
           onPress={() => {
+            console.log("logout");
             AsyncStorage.clear();
             navigation.navigate("Login");
           }}
@@ -37,10 +60,27 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      <Text>Press the button to check the token info 👇👇:</Text>
+      <Text style={{ width: "80%", textAlign: "center" }}>
+        Presiona el botón para comprobar el contenido del token 👇👇
+      </Text>
       <Button
-        title="Receive token info"
-        onPress={() => {
+        title="Recibir token"
+        onPress={async () => {
+          if (!(await NfcManager.isEnabled())) {
+            Alert.alert("⚠️ Error", "Tienes que activar NFC", [
+              {
+                text: "ACTIVAR",
+                onPress: () => {
+                  NfcManager.goToNfcSetting();
+                },
+              },
+            ]);
+            return;
+          }
+          if (!(await NfcManager.isSupported())) {
+            Alert.alert("⚠️ Error", "Tu dispositivo no soporta NFC");
+            return;
+          }
           setShowModal(true);
           HCEReceptor.getMessage((result: any) => {
             const aFunction = async () => {
@@ -48,9 +88,12 @@ export default function HomeScreen({ navigation }) {
               console.log(result);
               const response: any = await dispatch(sendToken(result));
               if (!response.ok) {
-                Alert.alert("❌ Invalid", response.reason);
+                Alert.alert("❌ Inválido", response.reason);
               } else {
-                Alert.alert("✅ Valid", `Left: ${response.token.count || (response.token.count == 0 ? "0" : "∞")}`);
+                Alert.alert(
+                  "✅ Válido",
+                  `Usos restantes: ${response.token.count || (response.token.count == 0 ? "0" : "∞")}`
+                );
               }
 
               setShowModal(false);
@@ -74,11 +117,11 @@ export default function HomeScreen({ navigation }) {
       <Modal transparent={true} animationType="slide" visible={showModal}>
         <View style={{ flex: 2, backgroundColor: "rgba(0,0,0,0.0)" }}></View>
         <View style={styles.topModalContainer}>
-          <Text style={{ fontWeight: "600", fontSize: 20, marginBottom: 10 }}>Approach the NFC emitter</Text>
-          <Text style={{ fontSize: 16, marginBottom: 30 }}>Waiting for token info...</Text>
+          <Text style={{ fontWeight: "600", fontSize: 20, marginBottom: 10 }}>Acerca el emisor NFC</Text>
+          <Text style={{ fontSize: 16, marginBottom: 30 }}>Esperando contenido del token...</Text>
           <Button
             color="warning"
-            title="cancel"
+            title="cancelar"
             onPress={() => {
               setShowModal(false);
             }}
@@ -110,7 +153,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontWeight: "600",
-    fontSize: 30,
+    fontSize: 28,
   },
   topModalContainer: {
     flex: 1,
